@@ -1,19 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-require('dotenv').config()
+const express = require("express");
+const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+require("dotenv").config();
 const app = express();
-const port = process.env.PORT || 5000
-
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
 app.use(express.json());
-
-
-
-
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.hepooac.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -23,7 +17,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -33,41 +27,75 @@ async function run() {
 
 
 
+    
     // connect collection
-    const serviceCollection = client.db('homeSwapDB').collection('services')
-    const bookingCollection = client.db('homeSwapDB').collection('bookings')
-    const addingCollection = client.db('homeSwapDB').collection('addProducts')
-
+    const serviceCollection = client.db("homeSwapDB").collection("services");
+    // const bookingCollection = client.db('homeSwapDB').collection('bookings')
 
     // service Collection
-    app.get('/api/v1/services', async (req, res) => {
-      const cursor = serviceCollection.find()
-      const result = await cursor.toArray()
+    app.get("/services", async (req, res) => {
+      const cursor = serviceCollection.find();
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
     
-      res.send(result)
-    })
-
-    // booking Collection
-    app.post('/api/v1/user/create-booking', async (req, res) => {
-      const booking = req.body;
-      const result = await bookingCollection.insertOne(booking)
-      res.send(result)
-    })
+    // create service Collection
+    app.post("/services", async (req, res) => {
+      const services = req.body;
+      const result = await serviceCollection.insertOne(services);
+      res.send(result);
+    });
 
 
     
-    // get adding collection
-    app.get('/api/v1/user/addProducts', async (req, res) => {
-      const cursor = addingCollection.find()
-      const result = await cursor.toArray()
+    // update service collection
+    app.get('/services/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await serviceCollection.findOne(query);
+      res.send(result);
+  });
+  app.put("/services/:id", async(req, res) =>{
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)};
+    const options = { upsert: true };
+    const updatedServices = req.body;
+      const service = {
+        $set: {
+          userName:updatedServices.userName, 
+          serviceName:updatedServices.serviceName, 
+          email:updatedServices.email, 
+          price:updatedServices.price, 
+          description:updatedServices.description, 
+          image:updatedServices.image, 
+          area:updatedServices.area
+        }
+      }
+      const result = await serviceCollection.updateOne(filter, options, service)
       res.send(result)
     })
-    // adding Collection
-    app.post('/api/v1/user/addProducts', async (req, res) => {
-      const addProducts = req.body;
-      const result = await addingCollection.insertOne(addProducts)
-      res.send(result)
-    })
+
+
+
+    //   // booking Collection add
+    //   app.post('/api/v1/user/booking', async (req, res) => {
+    //     const booking = req.body;
+    //     const result = await bookingCollection.insertOne(booking)
+    //     res.send(result)
+    //   })
+    //   // booking collection delete
+    //   app.delete('/api/v1/user/cancelBooking/:bookingId', async (req, res) => {
+    //     const id = req.params.bookingId
+    //     const query = { _id: new ObjectId(id) }
+    //     const result = await bookingCollection.deleteOne(query)
+
+    //     res.send(result)
+
+    // })
+
+
+
 
 
 
@@ -78,7 +106,9 @@ async function run() {
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -86,16 +116,10 @@ async function run() {
 }
 run().catch(console.dir);
 
-
-
-
-
-
-
 // server connection for all project
-app.get('/', (req, res) => {
-    res.send('setUp server running')
-})
+app.get("/", (req, res) => {
+  res.send("setUp server running");
+});
 app.listen(port, () => {
-    console.log(`setUp project server running on PORT: ${port}`);
-})
+  console.log(`setUp project server running on PORT: ${port}`);
+});
