@@ -36,18 +36,38 @@ async function run() {
     // connect collection
     const serviceCollection = client.db('homeSwapDB').collection('services')
     const bookingCollection = client.db('homeSwapDB').collection('bookings')
+    const addingCollection = client.db('homeSwapDB').collection('addProducts')
 
-    app.get('/api/v1/services', async (rew, res) => {
+
+    // service Collection
+    app.get('/api/v1/services', async (req, res) => {
       const cursor = serviceCollection.find()
       const result = await cursor.toArray()
     
       res.send(result)
     })
-    app.post('/api/v1/user/create-booking', (req, res) => {
-      req.body;
-      // res.send()
+
+    // booking Collection
+    app.post('/api/v1/user/create-booking', async (req, res) => {
+      const booking = req.body;
+      const result = await bookingCollection.insertOne(booking)
+      res.send(result)
     })
 
+
+    
+    // get adding collection
+    app.get('/api/v1/user/addProducts', async (req, res) => {
+      const cursor = addingCollection.find()
+      const result = await cursor.toArray()
+      res.send(result)
+    })
+    // adding Collection
+    app.post('/api/v1/user/addProducts', async (req, res) => {
+      const addProducts = req.body;
+      const result = await addingCollection.insertOne(addProducts)
+      res.send(result)
+    })
 
 
 
