@@ -30,7 +30,7 @@ async function run() {
     
     // connect collection
     const serviceCollection = client.db("homeSwapDB").collection("services");
-    // const bookingCollection = client.db('homeSwapDB').collection('bookings')
+    const bookingCollection = client.db('homeSwapDB').collection('bookings')
 
     // service Collection
     app.get("/services", async (req, res) => {
@@ -78,13 +78,13 @@ async function run() {
 
 
 
-    //   // booking Collection add
-    //   app.post('/api/v1/user/booking', async (req, res) => {
-    //     const booking = req.body;
-    //     const result = await bookingCollection.insertOne(booking)
-    //     res.send(result)
-    //   })
-    //   // booking collection delete
+      // booking Collection add
+      app.post('/bookings', async (req, res) => {
+        const bookings = req.body;
+        const result = await bookingCollection.insertOne(bookings)
+        res.send(result)
+      })
+      // booking collection delete
     //   app.delete('/api/v1/user/cancelBooking/:bookingId', async (req, res) => {
     //     const id = req.params.bookingId
     //     const query = { _id: new ObjectId(id) }
