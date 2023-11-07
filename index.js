@@ -44,36 +44,14 @@ async function run() {
       res.send(result);
     });
 
-    // update service collection
+    //  service collection
     app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await serviceCollection.findOne(query);
       res.send(result);
     });
-    app.put("/services/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updatedServices = req.body;
-      const service = {
-        $set: {
-          userName: updatedServices.userName,
-          serviceName: updatedServices.serviceName,
-          email: updatedServices.email,
-          price: updatedServices.price,
-          description: updatedServices.description,
-          image: updatedServices.image,
-          area: updatedServices.area,
-        },
-      };
-      const result = await serviceCollection.updateOne(
-        filter,
-        service,
-        options
-      );
-      res.send(result);
-    });
+
 
     // booking Collection add
     app.post("/bookings", async (req, res) => {
@@ -85,6 +63,38 @@ async function run() {
     app.get("/bookings", async (req, res) => {
       const cursor = bookingCollection.find();
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+     // update booking collection
+     app.get("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.put("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const bookingData = req.body;
+      const bookings = {
+        $set: {
+          userName: bookingData.userName,
+          serviceName: bookingData.serviceName,
+          email: bookingData.email,
+          price: bookingData.price,
+          description: bookingData.description,
+          image: bookingData.image,
+          area: bookingData.area,
+        },
+      };
+      const result = await bookingCollection.updateOne(
+        filter,
+        bookings,
+        options
+      );
       res.send(result);
     });
         // delete method
