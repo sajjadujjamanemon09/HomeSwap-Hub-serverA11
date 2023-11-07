@@ -25,12 +25,9 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-
-
-    
     // connect collection
     const serviceCollection = client.db("homeSwapDB").collection("services");
-    const bookingCollection = client.db('homeSwapDB').collection('bookings')
+    const bookingCollection = client.db("homeSwapDB").collection("bookings");
 
     // service Collection
     app.get("/services", async (req, res) => {
@@ -39,7 +36,7 @@ async function run() {
 
       res.send(result);
     });
-    
+
     // create service Collection
     app.post("/services", async (req, res) => {
       const services = req.body;
@@ -47,62 +44,58 @@ async function run() {
       res.send(result);
     });
 
-
-    
     // update service collection
-    app.get('/services/:id', async(req, res)=>{
+    app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await serviceCollection.findOne(query);
       res.send(result);
-  });
-  app.put("/services/:id", async(req, res) =>{
-    const id = req.params.id;
-    const filter = {_id: new ObjectId(id)};
-    const options = { upsert: true };
-    const updatedServices = req.body;
+    });
+    app.put("/services/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedServices = req.body;
       const service = {
         $set: {
-          userName:updatedServices.userName, 
-          serviceName:updatedServices.serviceName, 
-          email:updatedServices.email, 
-          price:updatedServices.price, 
-          description:updatedServices.description, 
-          image:updatedServices.image, 
-          area:updatedServices.area
-        }
-      }
-      const result = await serviceCollection.updateOne(filter, options, service)
-      res.send(result)
-    })
+          userName: updatedServices.userName,
+          serviceName: updatedServices.serviceName,
+          email: updatedServices.email,
+          price: updatedServices.price,
+          description: updatedServices.description,
+          image: updatedServices.image,
+          area: updatedServices.area,
+        },
+      };
+      const result = await serviceCollection.updateOne(
+        filter,
+        service,
+        options
+      );
+      res.send(result);
+    });
 
+    // booking Collection add
+    app.post("/bookings", async (req, res) => {
+      const bookings = req.body;
+      const result = await bookingCollection.insertOne(bookings);
+      res.send(result);
+    });
 
-
-      // booking Collection add
-      app.post('/bookings', async (req, res) => {
-        const bookings = req.body;
-        const result = await bookingCollection.insertOne(bookings)
-        res.send(result)
-      })
-      // booking collection delete
-    //   app.delete('/api/v1/user/cancelBooking/:bookingId', async (req, res) => {
-    //     const id = req.params.bookingId
-    //     const query = { _id: new ObjectId(id) }
-    //     const result = await bookingCollection.deleteOne(query)
-
-    //     res.send(result)
-
-    // })
-
-
-
-
-
-
-
-
-
-
+    app.get("/bookings", async (req, res) => {
+      const cursor = bookingCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+        // delete method
+    // app.delete("/bookings/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const result = await bookingCollection.deleteOne(query);
+    //   res.send(result);
+    // });
+   
+    // -------------------------------------------------------------------
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
