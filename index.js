@@ -1,21 +1,22 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken')
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware
-app.use(cors({
-  origin: [
- 'https://assignment-11-abaf2.web.app',
- 'https://assignment-11-abaf2.firebaseapp.com'
-
-],
-credentials: true
-}));
+// middlewares
+app.use(
+  cors({
+    origin: [
+      "https://assignment-11-abaf2.web.app",
+      "https://assignment-11-abaf2.firebaseapp.com",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.hepooac.mongodb.net/?retryWrites=true&w=majority`;
@@ -29,31 +30,27 @@ const client = new MongoClient(uri, {
   },
 });
 
-
-
-// middlewares 
-const logger = (req, res, next) =>{
-  console.log('log: info', req.method, req.url);
+// middlewares
+const logger = (req, res, next) => {
+  console.log("log: info", req.method, req.url);
   next();
-}
+};
 
-const verifyToken = (req, res, next) =>{
+const verifyToken = (req, res, next) => {
   const token = req?.cookies?.token;
   // console.log('token in the middleware', token);
-  // no token available 
-  if(!token){
-      return res.status(401).send({message: 'unauthorized access'})
+  // no token available
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
   }
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
-      if(err){
-          return res.status(401).send({message: 'unauthorized access'})
-      }
-      req.user = decoded;
-      next();
-  })
-}
-
-
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 
 async function run() {
   try {
@@ -64,25 +61,28 @@ async function run() {
     const serviceCollection = client.db("homeSwapDB").collection("services");
     const bookingCollection = client.db("homeSwapDB").collection("bookings");
 
-            // auth related api
-            app.post('/jwt', logger, async (req, res) => {
-              const user = req.body;
-              console.log('user for token', user);
-              const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-  
-              res.cookie('token', token, {
-                  httpOnly: true,
-                  secure: true,
-                  sameSite: 'none'
-              })
-                  .send({ success: true });
-          })
-  
-          app.post('/logout', async (req, res) => {
-              const user = req.body;
-              console.log('logging out', user);
-              res.clearCookie('token', { maxAge: 0 }).send({ success: true })
-          })
+    // auth related api
+    app.post("/jwt", logger, async (req, res) => {
+      const user = req.body;
+      console.log("user for token", user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
+    });
+
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out", user);
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    });
 
     // service Collection
     app.get("/services", async (req, res) => {
@@ -107,7 +107,6 @@ async function run() {
       res.send(result);
     });
 
-
     // booking Collection add
     app.post("/bookings", async (req, res) => {
       const bookings = req.body;
@@ -121,28 +120,28 @@ async function run() {
       res.send(result);
     });
 
-     // update booking collection
-     app.get("/bookings/:id", async (req, res) => {
+    // update booking collection
+    app.get("/bookings/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bookingCollection.findOne(query);
       res.send(result);
     });
 
-            // bookings 
-            app.get('/bookings', logger, verifyToken, async (req, res) => {
-              console.log(req.query.email);
-              console.log('token owner info', req.user)
-              if(req.user.email !== req.query.email){
-                  return res.status(403).send({message: 'forbidden access'})
-              }
-              let query = {};
-              if (req.query?.email) {
-                  query = { email: req.query.email }
-              }
-              const result = await bookingCollection.find(query).toArray();
-              res.send(result);
-          })
+    // bookings
+    app.get("/bookings", logger, verifyToken, async (req, res) => {
+      console.log(req.query.email);
+      console.log("token owner info", req.user);
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
 
     app.put("/bookings/:id", async (req, res) => {
       const id = req.params.id;
@@ -167,14 +166,14 @@ async function run() {
       );
       res.send(result);
     });
-        // delete method
+    // delete method
     app.delete("/bookings/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bookingCollection.deleteOne(query);
       res.send(result);
     });
-   
+
     // -------------------------------------------------------------------
 
     // Send a ping to confirm a successful connection
