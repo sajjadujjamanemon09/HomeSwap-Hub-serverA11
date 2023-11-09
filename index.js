@@ -11,9 +11,9 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      // "https://assignment-11-abaf2.web.app",
-      // "https://assignment-11-abaf2.firebaseapp.com",
+      // "http://localhost:5173",
+      "https://assignment-11-abaf2.web.app",
+      "https://assignment-11-abaf2.firebaseapp.com",
     ],
     credentials: true,
   })
@@ -60,15 +60,12 @@ async function run() {
 
     // connect collection
     const serviceCollection = client.db("homeSwapDB").collection("services");
-    const userServiceCollection = client
-      .db("homeSwapDB")
-      .collection("userServices");
+    const userServiceCollection = client.db("homeSwapDB").collection("userServices");
     const bookingCollection = client.db("homeSwapDB").collection("bookings");
 
     // auth related api
     app.post("/jwt", logger, async (req, res) => {
       const user = req.body;
-      console.log("user for token", user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1h",
       });
@@ -133,6 +130,14 @@ async function run() {
       const result = await userServiceCollection.findOne(query);
       res.send(result);
     });
+
+    // specific user collection to the add service My service page
+    app.get('/userIdServices',  async (req, res) => {
+          query = { email: req.query?.email }
+      console.log("query", req.query);
+      const result = await userServiceCollection.find(query).toArray();
+      res.send(result);
+    })
 
     // userService secure
     app.get("/userServices", logger, verifyToken, async (req, res) => {
