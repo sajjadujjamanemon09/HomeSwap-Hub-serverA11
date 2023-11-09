@@ -11,8 +11,9 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
-      "https://assignment-11-abaf2.web.app",
-      "https://assignment-11-abaf2.firebaseapp.com",
+      "http://localhost:5173",
+      // "https://assignment-11-abaf2.web.app",
+      // "https://assignment-11-abaf2.firebaseapp.com",
     ],
     credentials: true,
   })
@@ -59,6 +60,9 @@ async function run() {
 
     // connect collection
     const serviceCollection = client.db("homeSwapDB").collection("services");
+    const userServiceCollection = client
+      .db("homeSwapDB")
+      .collection("userServices");
     const bookingCollection = client.db("homeSwapDB").collection("bookings");
 
     // auth related api
@@ -92,14 +96,14 @@ async function run() {
       res.send(result);
     });
 
-    // create service Collection
+    // create service Collection post
     app.post("/services", async (req, res) => {
       const services = req.body;
       const result = await serviceCollection.insertOne(services);
       res.send(result);
     });
 
-    //  service collection
+    //  service collection get
     app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -107,28 +111,90 @@ async function run() {
       res.send(result);
     });
 
-    // booking Collection add
+    // userService Collection
+    app.get("/userServices", async (req, res) => {
+      const cursor = userServiceCollection.find();
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+
+    // create userService Collection post
+    app.post("/userServices", async (req, res) => {
+      const services = req.body;
+      const result = await userServiceCollection.insertOne(services);
+      res.send(result);
+    });
+
+    //  get user service collection
+    app.get("/userServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userServiceCollection.findOne(query);
+      res.send(result);
+    });
+
+    // userService secure
+    app.get("/userServices", logger, verifyToken, async (req, res) => {
+      console.log(req.query.email);
+      console.log("token owner info", req.user);
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await userServiceCollection.find(query).toArray();
+      res.send(result);
+    });
+    // userService update
+    app.put("/userServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const userServiceData = req.body;
+      const bookings = {
+        $set: {
+          userName: userServiceData.userName,
+          serviceName: userServiceData.serviceName,
+          email: userServiceData.email,
+          price: userServiceData.price,
+          description: userServiceData.description,
+          image: userServiceData.image,
+          area: userServiceData.area,
+        },
+      };
+      const result = await userServiceCollection.updateOne(
+        filter,
+        bookings,
+        options
+      );
+      res.send(result);
+    });
+
+    // user Service delete method
+    app.delete("/userServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userServiceCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // booking Collection post
     app.post("/bookings", async (req, res) => {
       const bookings = req.body;
       const result = await bookingCollection.insertOne(bookings);
       res.send(result);
     });
-
+    // booking Collection get
     app.get("/bookings", async (req, res) => {
       const cursor = bookingCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    // update booking collection
-    app.get("/bookings/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await bookingCollection.findOne(query);
-      res.send(result);
-    });
-
-    // bookings
+    // bookings collection secure
     app.get("/bookings", logger, verifyToken, async (req, res) => {
       console.log(req.query.email);
       console.log("token owner info", req.user);
@@ -143,30 +209,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/bookings/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const bookingData = req.body;
-      const bookings = {
-        $set: {
-          userName: bookingData.userName,
-          serviceName: bookingData.serviceName,
-          email: bookingData.email,
-          price: bookingData.price,
-          description: bookingData.description,
-          image: bookingData.image,
-          area: bookingData.area,
-        },
-      };
-      const result = await bookingCollection.updateOne(
-        filter,
-        bookings,
-        options
-      );
-      res.send(result);
-    });
-    // delete method
+    // booking delete method
     app.delete("/bookings/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
